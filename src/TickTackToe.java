@@ -10,6 +10,12 @@ import java.util.*;
  * @author Andrew Baliushin
  * @site http://andrewbaliushin.blogspot.ru/
  *
+ * output example:
+  1|2|3
+1|O|O|_|
+2|_|_|X|
+3|X|_|_|
+Make your move Anna(O):
  */
 public class TickTackToe {
 
