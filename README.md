@@ -1,5 +1,4 @@
-## Learning java ##
+## Console Tick Tack Toe ##
+### MinMax AI implemented ###
 
-###Day 5###
-
-Simplest TicTacToe
+Project is rebuild of my first ever app. 
