@@ -1,15 +1,14 @@
 import java.util.*;
-import java.util.Map.Entry;
 
 public class GameController {
 	
 	private final static int MAX_PLAYERS = 2;
 	
+	private Board board;
+	
 	private Player[] playerPool = new Player[MAX_PLAYERS];
 	private int currentPlayerIndexInPool;
 	private final static int LAST_INDEX_OF_PLAYER_POOL = MAX_PLAYERS - 1;
-	
-	private Board board;
 	
 	private Player playerForCurrentTurn;
 	
@@ -30,34 +29,73 @@ public class GameController {
 		board = new Board();
 	}
 	
+	public void drawBoard() {
+		GraphicRenderer.renderBoardInConsole(board.getGameField());
+	}
+
+	public boolean isRunning() {
+		return (!board.isGameFieldFull() && board.getWinnerIfAny() == null);
+	}
+
 	public void makeMove() {
 		useNextPlayerOrSelectByRandomIfNone();
 		Board.Point coords = getCoordsForNextMove();
 		if(board.isValidSpot(coords)) {
-			board.placeMarkOnField(new Board.Mark(playerForCurrentTurn), coords);
+			placeMarkOnField(new Board.Mark(playerForCurrentTurn), coords);
 		} else {
 			usePreviousPlayer();
 			System.out.println("Invalid coordinates. Try again.");			
 		}	
-	}
-
-	public void drawBoard() {
-		GraphicRenderer.renderBoardInConsole(board.getGameField());
-	}		
-
-	public boolean isRunning() {
-		return (!board.isGameFieldFull() && board.getWinnerIfAny() == null);
 	}
 	
 	public void printGameOverMessage() {
 		Player winner = board.getWinnerIfAny();
 		GraphicRenderer.printGameOverMessage(winner);
 	}
+
+	protected void placeMarkOnField(Board.Mark mark, Board.Point coords) {
+		board.placeMarkOnField(mark, coords);
+	}
 	
+	protected void removeMarkFromField(Board.Point point) {
+		board.removeMarkFromField(point);
+	}
+
+	protected Player getWinnerIfAny() {
+		return board.getWinnerIfAny();
+	}
+	
+	protected boolean isGameFieldFull() {
+		return board.isGameFieldFull();
+	}
+	
+	protected List<Board.Point> getAvailibleSpots() {
+		return board.getFreeSpots();
+	}
+
+	private Board.Point getCoordsForNextMove() {
+		Board.Point coords;
+		if(playerForCurrentTurn instanceof HumanPlayer) {
+			coords = askHumanPlayerForCoords();
+		} else { //computer
+			coords = askAIforCoords();
+		}
+		return coords;
+	}
+
+	private Board.Point askHumanPlayerForCoords() {
+		Board.Point point = UserInput.recieveCoordsFromHumanPlayer(playerForCurrentTurn);
+		return point;
+	}
+
+	private Board.Point askAIforCoords() {
+		return ComputerPlayer.getBestMove(this);
+	}
+
 	private void addPlayersToPool(boolean useAIopponent) {
 		for (int i = 0; i < playerPool.length; i++) {
 			if(i == LAST_INDEX_OF_PLAYER_POOL && useAIopponent) {
-				playerPool[i] = new ComputerPlayer(ComputerPlayer.computerName, 
+				playerPool[i] = new ComputerPlayer(ComputerPlayer.COMPUTER_NAME, 
 						Board.Mark.MarkSigns.values()[i].name());
 			}  else {
 				playerPool[i] = new HumanPlayer(Player.Names.values()[i].name(), 
@@ -66,7 +104,7 @@ public class GameController {
 		}
 	}
 
-	private void useNextPlayerOrSelectByRandomIfNone() {
+	protected void useNextPlayerOrSelectByRandomIfNone() {
 		if(playerForCurrentTurn == null) {
 			moveCurrentPlayerIndexToRandom();
 		} else {
@@ -75,7 +113,7 @@ public class GameController {
 		updateCurrentPlayerRef();
 	}
 	
-	private void usePreviousPlayer() {
+	protected void usePreviousPlayer() {
 		moveCurrentPlayerIndexToPrev();
 		updateCurrentPlayerRef();
 	}
@@ -103,70 +141,7 @@ public class GameController {
 		updateCurrentPlayerRef();
 	}
 	
-	private Board.Point getCoordsForNextMove() {
-		Board.Point coords;
-		if(playerForCurrentTurn instanceof HumanPlayer) {
-			coords = askHumanPlayerForCoords();
-		} else { //computer
-			coords = askAIforCoords();
-		}
-		return coords;
+	protected Player getCurrentPlayer() {
+		return playerForCurrentTurn;
 	}
-	
-	private Board.Point askHumanPlayerForCoords() {
-		Board.Point point = UserInput.recieveCoordsFromHumanPlayer(playerForCurrentTurn);
-		return point;
-	}
-	
-	private Board.Point askAIforCoords() {
-		return ComputerPlayer.getBestMove(this);
-	}
-	
-	public static Board.Point getBestMove(GameController game) {		
-		List<Board.Point> freeSpots = game.board.getFreeSpots();
-		
-		Map<Board.Point, Integer> scoreForSpots = new HashMap<>();
-		
-		for (Board.Point point : freeSpots) {
-			game.board.placeMarkOnField(new Board.Mark(game.playerForCurrentTurn), point);
-			
-			scoreForSpots.put(point, getScoreForCurrenMove(game, game.playerForCurrentTurn));
-			
-			game.board.removeMarkFromField(point);
-		}
-		
-		int maxScore = Integer.MIN_VALUE;
-		Board.Point bestMove = null;
-		for(Entry<Board.Point, Integer> entry: scoreForSpots.entrySet()) {
-		    if (entry.getValue() > maxScore) {
-		    	maxScore = entry.getValue();
-		    	bestMove = entry.getKey();
-		    }
-		}
-		
-		return bestMove;
-	}
-	
-	public static int getScoreForCurrenMove(GameController game, Player selectedPlayer) {
-		if(game.board.getWinnerIfAny() != null) {
-			return (game.playerForCurrentTurn == selectedPlayer) ? 1 : -1;
-		} 
-		if(game.board.isGameFieldFull()){
-			return 0;
-		}
-		
-		List<Board.Point> freeSpots = game.board.getFreeSpots();
-		int score = 0;
-		for (Board.Point point : freeSpots) {
-			game.useNextPlayerOrSelectByRandomIfNone();
-			game.board.placeMarkOnField(new Board.Mark(game.playerForCurrentTurn), point);
-			
-			score += getScoreForCurrenMove(game, selectedPlayer);
-			
-			game.usePreviousPlayer();
-			game.board.removeMarkFromField(point);
-		}
-		
-		return score;
-	}	
 }

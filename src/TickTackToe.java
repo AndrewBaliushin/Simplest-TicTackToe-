@@ -1,11 +1,7 @@
-
 public class TickTackToe {
 	
 	public static GameController game;
 
-	/**
-	 * @param args
-	 */
 	public static void main(String[] args) {
 		if (UserInput.isOpponentAI()) {
 			game = GameController.startGameVsAI();
