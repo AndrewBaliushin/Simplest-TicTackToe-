@@ -101,43 +101,68 @@ public class Board {
 		gameField[coords.getRow()][coords.getCol()] = null;
 	}
 	
-	public Player getWinnerIfAny() {
-		Player verticalOrHorizontalWinner = lookForWinnerOnVerticalAndHorizontal();
-		Player diagonalWinner = lookForWinnerOnDiagonal();
+	public Player getWinnerIfAny() {		
+		Set<Player> winners = new HashSet<>();
 		
-		if(verticalOrHorizontalWinner != null) {
-			return verticalOrHorizontalWinner;
-		} else if (diagonalWinner != null) {
-			return diagonalWinner;
-		} else {
-			return null;
-		}
+		winners.add(lookForWinnerAtVertical());
+		winners.add(lookForWinnerOnHorizontal());
+		winners.add(lookForWinnerOnLeftDiagonal());
+		winners.add(lookForWinnerOnRightDiagonal());
+		
+		winners.remove(null);
+		
+		return (winners.size() > 0) ? (Player) winners.toArray()[0] : null;
 	}
 	
-	private Player lookForWinnerOnVerticalAndHorizontal() {
+	private Player lookForWinnerOnHorizontal() {
 		for (int i = 0; i < FIELD_SIZE; i++) {
-            if (getSpotOwner(i,0) != null && getSpotOwner(i,0) == getSpotOwner(i,1) &&
-                    getSpotOwner(i,1) == getSpotOwner(i,2)) {
-            	return getSpotOwner(i,0);
-            }
-            if (getSpotOwner(0, i) != null && getSpotOwner(0,i) == getSpotOwner(1,i) &&
-                    getSpotOwner(1,i) == getSpotOwner(2,i)) {
-            	return getSpotOwner(0, i);
-            }
+			Set<Player> spotOwnersOnRow = new HashSet<>();
+			for(int row = 0; row < FIELD_SIZE; row++){
+				spotOwnersOnRow.add(getSpotOwner(i, row));
+			}
+			if(spotOwnersOnRow.size() == 1 && getSpotOwner(i, 0) != null) {
+				return getSpotOwner(i, 0);
+			}
         }
 		return null;
 	}
 	
-	private Player lookForWinnerOnDiagonal() {
-        if (getSpotOwner(1,1) == null) return null;
-
-        if (getSpotOwner(0,0) == getSpotOwner(1,1) && getSpotOwner(1,1) == getSpotOwner(2,2)) {
-        	return getSpotOwner(0,0);
-        }
-
-        if (getSpotOwner(0,2) == getSpotOwner(1,1) && getSpotOwner(1,1) == getSpotOwner(2,0)) {
-        	return getSpotOwner(0,2);
-        }
-        return null;
+	private Player lookForWinnerAtVertical() {
+		for (int i = 0; i < FIELD_SIZE; i++) {
+			Set<Player> spotOwnersOnColumn = new HashSet<>();
+			for(int column = 0; column < FIELD_SIZE; column++){
+				spotOwnersOnColumn.add(getSpotOwner(column, i));
+			}
+			if(spotOwnersOnColumn.size() == 1 && getSpotOwner(0, i) != null) {
+				return getSpotOwner(0, i);
+			}
+		}
+		return null;
 	}
+	
+	private Player lookForWinnerOnLeftDiagonal() {
+		Set<Player> spotOwnersOnDiagonal = new HashSet<>();
+		for (int i = 0; i < FIELD_SIZE; i++) {
+			spotOwnersOnDiagonal.add(getSpotOwner(i, i));
+		}
+		if(spotOwnersOnDiagonal.size() == 1 && getSpotOwner(0, 0) != null) {
+			return getSpotOwner(0, 0);
+		} 
+		return null;
+	}
+	
+	private Player lookForWinnerOnRightDiagonal() {
+		Set<Player> spotOwnersOnDiagonal = new HashSet<>();
+		int maxFieldIndex = FIELD_SIZE - 1;
+		
+		for (int i = 0; i < FIELD_SIZE; i++) {
+			spotOwnersOnDiagonal.add(getSpotOwner(maxFieldIndex - i, i));
+		}
+		if(spotOwnersOnDiagonal.size() == 1 && getSpotOwner(maxFieldIndex, 0) != null) {
+			return getSpotOwner(maxFieldIndex, 0);
+		} 
+		return null;
+	}
+	
+	
 }
