@@ -1,9 +1,4 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.*;
 
 public class ComputerPlayer extends Player {
 
@@ -13,64 +8,69 @@ public class ComputerPlayer extends Player {
 		super(name, markSign);
 	}
 
-	/**
-	 * Uses minmax algorithm. 
-	 * @param game
-	 * @return
-	 */
-	public static Board.Point getBestMove(GameController game) {		
-		List<Board.Point> freeSpots = game.getAvailibleSpots();
-		
-		Map<Board.Point, Integer> scoreForSpots = new HashMap<>();
-		
-		for (Board.Point point : freeSpots) {
-			game.placeMarkOnField(new Board.Mark(game.getCurrentPlayer()), point);
-			
-			scoreForSpots.put(point, getScoreForCurrenMove(game, game.getCurrentPlayer()));
-			
-			game.removeMarkFromField(point);
-		}
-		
-		return getBestScoredMove(scoreForSpots);
+	public Board.Point getCoordsForMove() {
+		return getBestMove(true).getCoords();
 	}
 	
-	private static int getScoreForCurrenMove(GameController game, Player selectedPlayer) {
-		if(game.getWinnerIfAny() != null) {
-			return (game.getCurrentPlayer() == selectedPlayer) ? 1 : -1;
+	private Move getBestMove(boolean ourTurn) {
+		Player currentPlayer = (ourTurn) ? this : getOppnent();
+		Move bestMove = new Move();
+		
+		if(getInnerCopyBoard().getWinnerIfAny() != null) {
+			int score = (ourTurn) ? -1 : 1; //opponent have win by last move
+			bestMove.setScore(score);
+			return bestMove;
 		} 
-		if(game.isGameFieldFull()){
-			return 0;
+		if(getInnerCopyBoard().isGameFieldFull()){
+			bestMove.setScore(0);
+			return bestMove;
 		}
 		
-		game.useNextPlayerOrSelectByRandomIfNone();
-		Player playerForCurrentTurn = game.getCurrentPlayer();
+		//set scores lo\hi than min\max so move would return anyway
+		if(ourTurn) {
+			bestMove.setScore(-2);
+		} else {
+			bestMove.setScore(2);
+		}
 		
-		List<Board.Point> freeSpots = game.getAvailibleSpots();
-		
-		List<Integer> scores = new ArrayList<Integer>();
+		List<Board.Point> freeSpots =  getInnerCopyBoard().getFreeSpots();
 		for (Board.Point point : freeSpots) {
-			game.placeMarkOnField(new Board.Mark(playerForCurrentTurn), point);
-			scores.add(getScoreForCurrenMove(game, selectedPlayer));
-			game.removeMarkFromField(point);
+			getInnerCopyBoard().placeMarkOnField(new Board.Mark(currentPlayer), point);
+			Move currentMove = getBestMove(!ourTurn);
+			getInnerCopyBoard().removeMarkFromField(point);
+			
+			if ((ourTurn && (currentMove.getScore() > bestMove.getScore())) ||
+					(!ourTurn && (currentMove.getScore() < bestMove.getScore()))) {
+				bestMove.setCoords(point);
+				bestMove.setScore(currentMove.getScore());
+			} 
 		}
 		
-		game.usePreviousPlayer();
-		
-		Collections.sort(scores);
-		
-		return (playerForCurrentTurn == selectedPlayer) ? scores.get(scores.size() - 1) : 
-			scores.get(0);
-	}	
-	
-	private static Board.Point getBestScoredMove (Map<Board.Point, Integer> scoreForSpots) {
-		int maxScore = Integer.MIN_VALUE;
-		Board.Point bestMove = null;
-		for(Entry<Board.Point, Integer> entry: scoreForSpots.entrySet()) {
-		    if (entry.getValue() > maxScore) {
-		    	maxScore = entry.getValue();
-		    	bestMove = entry.getKey();
-		    }
-		}
 		return bestMove;
+	}
+	
+	private Player getOppnent() {
+		return (playerPool.get(0) == this) ? playerPool.get(1) : playerPool.get(0);
+	}
+	
+	private class Move {
+		private int score;
+		private Board.Point coords;
+
+		public void setScore(int score) {
+			this.score = score;
+		}
+
+		public void setCoords(Board.Point coords) {
+			this.coords = coords;
+		}
+
+		public int getScore() {
+			return score;
+		}
+		
+		public Board.Point getCoords() {
+			return coords;
+		}
 	}
 }
