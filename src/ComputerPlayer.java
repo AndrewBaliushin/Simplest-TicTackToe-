@@ -2,6 +2,11 @@ import java.util.*;
 
 public class ComputerPlayer extends Player {
 
+	private class Move {
+		public int score;
+		public Board.Point coords;
+	}
+
 	public static final String COMPUTER_NAME = "AI";
 	
 	public ComputerPlayer(String name, String markSign) {
@@ -9,7 +14,7 @@ public class ComputerPlayer extends Player {
 	}
 
 	public Board.Point getCoordsForMove() {
-		return getBestMove(true).getCoords();
+		return getBestMove(true).coords;
 	}
 	
 	private Move getBestMove(boolean ourTurn) {
@@ -18,19 +23,19 @@ public class ComputerPlayer extends Player {
 		
 		if(getInnerCopyBoard().getWinnerIfAny() != null) {
 			int score = (ourTurn) ? -1 : 1; //opponent have win by last move
-			bestMove.setScore(score);
+			bestMove.score = score;
 			return bestMove;
 		} 
 		if(getInnerCopyBoard().isGameFieldFull()){
-			bestMove.setScore(0);
+			bestMove.score = 0;
 			return bestMove;
 		}
 		
 		//set scores lo\hi than min\max so move would return anyway
 		if(ourTurn) {
-			bestMove.setScore(-2);
+			bestMove.score = -2;
 		} else {
-			bestMove.setScore(2);
+			bestMove.score = 2;
 		}
 		
 		List<Board.Point> freeSpots =  getInnerCopyBoard().getFreeSpots();
@@ -39,10 +44,10 @@ public class ComputerPlayer extends Player {
 			Move currentMove = getBestMove(!ourTurn);
 			getInnerCopyBoard().removeMarkFromField(point);
 			
-			if ((ourTurn && (currentMove.getScore() > bestMove.getScore())) ||
-					(!ourTurn && (currentMove.getScore() < bestMove.getScore()))) {
-				bestMove.setCoords(point);
-				bestMove.setScore(currentMove.getScore());
+			if ((ourTurn && (currentMove.score > bestMove.score)) ||
+					(!ourTurn && (currentMove.score < bestMove.score))) {
+				bestMove.coords = point;
+				bestMove.score = currentMove.score;
 			} 
 		}
 		
@@ -51,26 +56,5 @@ public class ComputerPlayer extends Player {
 	
 	private Player getOppnent() {
 		return (playerPool.get(0) == this) ? playerPool.get(1) : playerPool.get(0);
-	}
-	
-	private class Move {
-		private int score;
-		private Board.Point coords;
-
-		public void setScore(int score) {
-			this.score = score;
-		}
-
-		public void setCoords(Board.Point coords) {
-			this.coords = coords;
-		}
-
-		public int getScore() {
-			return score;
-		}
-		
-		public Board.Point getCoords() {
-			return coords;
-		}
 	}
 }
