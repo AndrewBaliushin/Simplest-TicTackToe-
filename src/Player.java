@@ -2,8 +2,7 @@ import java.util.ArrayList;
 
 public abstract class Player {
 	
-	protected static ArrayList<Player> playerPool = new ArrayList<>();
-	
+	public static ArrayList<Player> playerPool = new ArrayList<>();
 	
 	private String name;
 	private String markSign;

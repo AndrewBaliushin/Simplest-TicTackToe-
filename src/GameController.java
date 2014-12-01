@@ -2,13 +2,9 @@ import java.util.*;
 
 public class GameController {
 	
-	private final static int NUM_PLAYERS = 2;
-	
 	private Board board;
 	
-	private Player[] playerPool = new Player[NUM_PLAYERS];
 	private int currentPlayerIndexInPool;
-	private final static int LAST_INDEX_OF_PLAYER_POOL = NUM_PLAYERS - 1;
 	
 	private Player playerForCurrentTurn;
 	
@@ -21,7 +17,7 @@ public class GameController {
 	}
 	
 	private GameController(boolean useAIoppenent) {
-		createPlayerToPool(useAIoppenent);
+		createPlayers(useAIoppenent);
 		board = new Board();
 	}
 	
@@ -51,21 +47,22 @@ public class GameController {
 		GraphicRenderer.printGameOverMessage(winner);
 	}
 
-	private void createPlayerToPool(boolean useAIopponent) {
-		for (int i = 0; i < playerPool.length; i++) {
-			if(i == LAST_INDEX_OF_PLAYER_POOL && useAIopponent) {
-				playerPool[i] = new ComputerPlayer(ComputerPlayer.COMPUTER_NAME, 
-						Board.Mark.MarkSigns.values()[i].name());
-			}  else {
-				playerPool[i] = new HumanPlayer(HumanPlayer.Names.values()[i].name(), 
-						Board.Mark.MarkSigns.values()[i].name());
-			}
+	private void createPlayers(boolean useAIopponent) {
+		if(useAIopponent) {
+			new ComputerPlayer(ComputerPlayer.COMPUTER_NAME, 
+					Board.Mark.MarkSigns.values()[0].name());
+		} else {
+			new HumanPlayer(HumanPlayer.Names.values()[0].name(), 
+					Board.Mark.MarkSigns.values()[0].name());
 		}
+		
+		new HumanPlayer(HumanPlayer.Names.values()[1].name(), 
+				Board.Mark.MarkSigns.values()[1].name());
 	}
 
 	private void notifyPlayersAboutMove(Board.Mark mark, Board.Point coordsOfMove) {
-		for (int i = 0; i < playerPool.length; i++) {
-			playerPool[i].recieveNotificationAboutMove(mark, coordsOfMove);
+		for (int i = 0; i < Player.playerPool.size(); i++) {
+			Player.playerPool.get(i).recieveNotificationAboutMove(mark, coordsOfMove);
 		}
 	}
 
@@ -84,25 +81,24 @@ public class GameController {
 	}
 	
 	private void updateCurrentPlayerRef() {
-		playerForCurrentTurn = playerPool[currentPlayerIndexInPool];
+		playerForCurrentTurn = Player.playerPool.get(currentPlayerIndexInPool);
 	}
 	
 	private void moveCurrentPlayerIndexToRandom() {
 		 Random r = new Random();
-		 int index = r.nextInt(playerPool.length);
+		 int index = r.nextInt(Player.playerPool.size());
 		 currentPlayerIndexInPool = index;
 	}
 	
 	private void moveCurrentPlayerIndexToNext() {
-		if(++currentPlayerIndexInPool >= playerPool.length) {
+		if(++currentPlayerIndexInPool >= Player.playerPool.size()) {
 			currentPlayerIndexInPool = 0;
 		} 
 	}
 	
 	private void moveCurrentPlayerIndexToPrev() {
 		if(--currentPlayerIndexInPool < 0) {
-			currentPlayerIndexInPool = playerPool.length - 1;
+			currentPlayerIndexInPool = Player.playerPool.size() - 1;
 		} 
-		updateCurrentPlayerRef();
 	}
 }
